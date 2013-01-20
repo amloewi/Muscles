@@ -1,0 +1,163 @@
+$def with (exercises)
+
+<html>
+
+	<head>
+		<!-- FASCINATING FACT: 
+			If you have src/href=thing.stuff, it expects it in the RELATIVE path, i.e. suffixed to the url you're on. If you have src/href=SLASHthing.stuff, then it looks in the root directory, i.e. the place where you probably actually keep your images folder. 
+			How in FUCK's name did it occur to me that might be the problem?
+			Not a clue, but it was. Don't let it happen to you!
+		-->
+		<!-- The imports for the script ... have been moved OUT of the head and down to right before the </body> tag, after reading about proper placement on stack exchange. -->
+		
+	
+		<!-- The style sheets -->
+		<link rel="stylesheet" href="/static/css/circus/stylesheet.css" type="text/css" charset="utf-8" />
+		<link rel="stylesheet" href="/static/css/layout.css" type="text/css" charset="utf-8" />
+	</head>
+	
+	<body>
+	
+		<!-- These divs are styled with layout.css -->
+		<div id="outer">
+			<!-- <div id="left"> -->
+				<img id="body_front" src="/static/images/muscles-front.jpeg" />
+				<img id="body_back" src="/static/images/muscles-back.jpeg" />
+				
+			<!-- </div> -->
+			$if exercises:
+				$for e in exercises:
+					<div id="div_$e.muscle" class="middle" >
+						<h2>$e.muscle</h2>
+						<table>
+							<tr>
+								<td>Sets:</td>
+								<td>$e.sets</td/>
+							</tr>
+							<tr>
+								<td>Reps:</td>
+								<td>$e.reps</td/>
+							</tr>
+							<tr>
+								<td>Weight:</td>
+								<td>$e.weight</td/>
+							</tr>
+						</table>
+					</div>
+			<div id="welcome" class="middle">
+				$if exercises:
+					<h2>Check out these muscles!</h2>
+				$else:
+					<h2>It's been at least two days! 
+						<p style="color:red"> 
+						<!-- Eventually, this will send an email. -->
+								Find out what's wrong!
+							
+						</p>
+					</h2>
+			</div>
+	
+			<!-- <div id="right"> -->
+			<!-- </div> -->
+		</div>
+		
+		<script src="/static/js/libraries/raphael.js" type="text/javascript" ></script>
+		<script src="/static/js/libraries/jquery-1.9.0.js" type="text/javascript" ></script>
+		<script src="/static/js/muscles.js" type="text/javascript" ></script>
+		
+		<!-- The muscle-group highlighting functionality -->
+		<script type="text/javascript">
+			window.onload = function() {
+				var R = Raphael(0, 0, 1000, 400);
+				var body = {};
+	//The file muscles.js defines an object with the muscle shapes
+	// muscles = { "side": [["part", "bezier, "bezier], ...], ... }
+
+				// 'side': front or back. 'part': biceps, etc.
+				for ( var side in muscles ) {
+					//Initialize each side, to be filled with parts
+					body[side] = {};
+					for ( var part in muscles[side] ) {
+					
+						pair = R.set(
+							R.path(muscles[side][part][1]),
+							R.path(muscles[side][part][2])
+						)
+						// e.g. body["back"]["hams"]
+						//remember, javascript iterator vars are INTEGERS
+						//for Arrays, strings (keys) for Objects
+						body[side][muscles[side][part][0]] = pair
+					};					
+				};
+				//A special case, to get it to light on both people at once
+				pair = R.set(
+					body['front']['brain'],
+					body['back']['brain']
+				)
+				body['front']['brain'] = pair
+				
+				for(var side in body){
+					for(var part in body[side]){
+		
+						body[side][part].animate({'opacity':0.5},0)
+						// If the div id=part EXISTS, i.e. there was an exercise in the last workout that produced it, turn it blue
+						if (jQuery("#div_"+part).length){
+							body[side][part].attr('fill','blue')
+						}
+						
+						//Get the color for each part, so that it can be restored when the mouse moves OFF of it
+						var part_color = jQuery("#"+part).css('color')
+												
+						//GODDAMN! Thank you stackexchange! Again!
+						//http://jsfiddle.net/cordesmj/4VYHe/9/
+						function getHoverHandler(fillColor, z, op){
+							//Have to make a copy, or else
+							//rather than each piece getting its own function
+							//the same function is just assigned to each
+							//piece, in turn, and stays on the last one.
+							var bp = body[side][part];
+							var p = part
+							
+							return function () {
+								//Then you have to CALL the copy. 
+								// HAVE TO. Forgetting is frustrating.
+								jQuery("#"+p).css('color', fillColor)
+								bp.animate({'opacity': op},0);
+								//The z-index for all class="middle" elements
+								//is 1, with the default on top (due to order
+								//of creation). So z-index=2 is like 'show',
+								// z-index=0 is like 'back behind default'.
+								jQuery("#div_"+p).css("z-index", z)
+							}
+						}
+						
+						body[side][part].hover(getHoverHandler("f00",
+						 										2, 
+																0.5),
+										 	   getHoverHandler(part_color,
+											 					0,
+											 					0.5));
+					}
+				}
+				
+				//Can this (translate) be made general? Don't know how well it will translate across ... different screen sizes, or something.
+				//parcels out the two sets, and moves them to be on top of their pictures. Coordinates found by eye, trial, and error.
+				front_body_set = R.set();
+				back_body_set = R.set();
+				for(var part in body['front']){
+					front_body_set.push(body['front'][part])
+				};
+				for(var part in body['back']){
+					back_body_set.push(body['back'][part])
+				};
+				front_body_set.translate(58, 80);
+				back_body_set.translate(558,100)
+				//The explicit linking of frant and back brains leads to the back brain getting BOTH sets of 'translate' actions, so the second needs to be undone.
+				body['back']['brain'].translate(-58,-80)
+			}
+		
+		</script>
+	
+	</body>
+
+</html>

@@ -1,0 +1,213 @@
+$def with (person)
+<!-- The line above MUST be the first line in the file, or it freaks out. 
+It defines the python variables that were passed from the 'render' call.-->
+<!-- THIS IS JUST SHOW_PERSON, COPYPASTEEDITED. COULD THAT BE CLEANER? -->
+
+
+<html>
+
+	<head>
+		<!-- FASCINATING FACT: 
+			If you have src/href=thing.stuff, it expects it in the RELATIVE path, i.e. suffixed to the url you're on. If you have src/href=SLASHthing.stuff, then it looks in the root directory, i.e. the place where you probably actually keep your images folder. 
+			How in FUCK's name did it occur to me that might be the problem?
+			Not a clue, but it was. Don't let it happen to you!
+		-->
+		<!-- The imports for the script ... have been moved OUT of the head and down to right before the </body> tag, after reading about proper placement on stack exchange. And now back again, because ... things were called before they were created? It was awful. -->
+		
+	
+		<!-- The style sheets -->
+		<link rel="stylesheet" href="/static/css/circus/stylesheet.css" type="text/css" charset="utf-8" />
+		<link rel="stylesheet" href="/static/css/layout.css" type="text/css" charset="utf-8" />
+		
+		<script src="/static/js/libraries/jquery-1.9.0.js" type="text/javascript" ></script>
+		<script src="/static/js/libraries/raphael.js" type="text/javascript" ></script>
+		<script src="/static/js/muscles.js" type="text/javascript" ></script>
+		<script type="text/javascript">
+		
+			//window.onload = function() {
+			jQuery('document').ready( function () {
+				//This will be ... populated? By ... 
+				var exercises = {};
+			
+				//Another horrendous, but functional hack. I have to store a limit for the 'for' loop that looks at all the highlighed pieces, because if I don't it goes forever slash invariably and completely crashes the browser.
+				jQuery('body').data('elems', 0)
+			
+				var colors = {};
+			
+				var R = Raphael(0, 0, 1000, 400);
+				var body = {};
+	//The file muscles.js defines an object with the muscle shapes
+	// muscles = { "side": [["part", "bezier, "bezier], ...], ... }
+
+				// 'side': front or back. 'part': biceps, etc.
+				for ( var side in muscles ) {
+					//Initialize each side, to be filled with parts
+					body[side] = {};
+					for ( var part in muscles[side] ) {
+				
+						pair = R.set(
+							R.path(muscles[side][part][1]),
+							R.path(muscles[side][part][2])
+						)
+						// e.g. body["back"]["hams"]
+						//remember, javascript iterator vars are INTEGERS
+						//for Arrays, strings (keys) for Objects
+						body[side][muscles[side][part][0]] = pair
+					};					
+				};
+				//A special case, to get it to light on both people (sides) at once
+				pair = R.set(
+					body['front']['brain'],
+					body['back']['brain']
+				)
+				body['front']['brain'] = pair
+			
+				for(var side in body){
+					for(var part in body[side]){
+	
+						//This is just to tone down the outlines --- which might actually be nice, if you don't know where the muscles are, come to thin of it.
+						body[side][part].animate({'fill':'red'})
+						body[side][part].animate({'opacity':0.0})
+					
+						//Get the color for each part, so that it can be restored when the mouse moves OFF of it
+						//var part_color = body[side][part].attr('fill');
+						jQuery('body').data(part, 'red')
+											
+						//CANNOT, FOR THE FUCKING DEATH OF ME, GET MOUSEOVERS TO WORK, IN ANY CONCEIVABLE PERMUTATION. SO FUCK THEM.
+						// var p = part
+						// jQuery("#"+p).mouseenter( function() {
+						// alert("NOW")
+						// jQuery(this).animate({'fill': 'red'});
+						// jQuery(this).animate({'opacity': 1});
+						// 
+						// });
+						// 
+						// 
+						// jQuery("#"+p).mouseleave( function() {
+						// jQuery(this).animate({'fill': jQuery('body').data(p)});
+						// //If the colors's red, make it un-opaque; blue, 0.8
+						// jQuery(this).animate({'opacity': jQuery('body').data(p)});
+						// });
+										
+						function getClickHandler(){
+							var bp = body[side][part];
+							var p = part;
+						
+							return function () {
+								//clicked ON
+								color_now = bp[0].attr('fill')
+								if(color_now == 'red'){
+									bp.animate({'fill':'blue'})
+									bp.animate({'opacity':0.8})
+									jQuery('body').data(p, 'blue')
+								
+									//Make a form
+									//This could be prettier
+									a = "<form id='"+p+"_entry' class='exercise' style='font-size:30'>"+p+"<br>"
+									b = 	"Sets:<input type='text' name='sets'><br>"
+									c = 	"Reps:<input type='text' name='reps'><br>"
+									d = 	"Weight:<input type='text' name='weight'>"
+									//I have to have the muscle info HERE, because I serializeArray this form, and I haven't
+									//been able to sneak this last piece of information in at any other stage.
+									e = 	"<input type='text' name='muscle' value='"+p+"' style='visibility:hidden'></form>"								
+								
+									var f = jQuery("#outer").append(a+b+c+d+e)
+									
+									now = jQuery('body').data('elems')
+									jQuery('body').data('elems', now+1)
+													
+								} else {
+								//clicked OFF
+									bp.animate({'fill':'red'})
+									bp.animate({'opacity':0.0})
+									jQuery('body').data(p, 'red')
+									jQuery("#"+p+"_entry").remove()
+									
+									now = jQuery('body').data('elems')
+									jQuery('body').data('elems', now-1)
+									
+								}
+							}
+						}
+						body[side][part].click(getClickHandler());
+					}
+				}
+			
+
+			
+			
+				//Can this (translate) be made general? Don't know how well it will translate across ... different screen sizes, or something.
+				//parcels out the two sets, and moves them to be on top of their pictures. Coordinates found by eye, trial, and error.
+				front_body_set = R.set();
+				back_body_set = R.set();
+				for(var part in body['front']){
+					front_body_set.push(body['front'][part])
+				};
+				for(var part in body['back']){
+					back_body_set.push(body['back'][part])
+				};
+				front_body_set.translate(58, 80);
+				back_body_set.translate(558,100)
+				//The explicit linking of frant and back brains leads to the back brain getting BOTH sets of 'translate' actions, so the second needs to be undone.
+				body['back']['brain'].translate(-58,-80)
+			
+
+		});
+
+				//THIS needs to be defined OUTSIDE of jQuery('document').ready() 'cause otherwise it can't be seen later on, as it only exists within THAT context.
+				function submitExercises() {
+					//Called by the submit button
+					//Get all the forms ... get all their contents ... post it to enter_workout.
+					
+					var exercises = jQuery(".exercise")
+					var workout = {};
+					workout['exercises'] = [];
+					var limit = jQuery('body').data('elems')
+					for (var i in exercises) {
+						if( i < limit ){
+							
+							ex = jQuery(exercises[i]).serializeArray()
+							workout['exercises'].push(ex)
+						}
+						
+					}
+					//Retrieving (SO UGLY) the ugliliy-hidden name.
+					var name = Array(jQuery(".name"))[0].attr('id')
+					workout['name'] = name
+					jQuery.post("/record/"+name,
+								JSON.stringify(workout),
+								function () { window.location = '/success' }
+								);
+								
+				
+				}
+
+		</script>
+		
+	</head>
+	
+	<body>
+		<!-- A cheap (but fuck it) way to pass the passed webpy object to javascript, since it can't go directly. -->
+		<div id='$person' class="name"></div>
+		<!-- These divs are styled with layout.css -->
+		<div id="outer">
+			<!-- <div id="left"> Good practice? -->
+				<img id="body_front" src="/static/images/muscles-front.jpeg" />
+				<img id="body_back" src="/static/images/muscles-back.jpeg" />				
+			<!-- </div> -->
+			
+			<div id="welcome" class="middle">
+				<h2>Click on a muscle that you worked out!</h2>
+			</div>
+	
+			<!-- <div id="right"> -->
+			<!-- </div> -->
+			<div style="position:absolute; left:430px; top:400px; z-index:2">
+				<input type='button' value='Make it part of history!' onclick='submitExercises()'>
+			</div>
+		</div>
+			
+	
+	</body>
+
+</html>

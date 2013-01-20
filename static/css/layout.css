@@ -1,0 +1,78 @@
+body
+{
+	font-family:circusregular;
+}
+
+#outer
+{
+	margin:100px;
+}
+
+#body_front
+{
+	position:absolute;
+	left:58px;
+	top:80px;
+}
+
+#body_back
+{
+	position:absolute;
+	left:558px;
+}
+
+#left
+{
+	margin-top:150px;
+	left:100px;
+
+}
+
+.middle
+{
+	position:absolute;
+	left:400px;
+	top:150px;
+	width:200px;
+	height:300px;
+	background-color:white;
+	text-align:center;
+	z-index:1;
+
+}
+
+.exercise
+{
+/*	Same as middle, but named differently so they can be selected by class*/
+	position:absolute;
+	left:400px;
+	top:150px;
+	width:200px;
+	height:300px;
+	background-color:white;
+	text-align:center;
+	z-index:1;
+
+}
+
+#right
+{
+/*	position:absolute;
+	float:left;
+	left:400px;
+	
+	width:250px;*/
+}
+
+.entersite
+{
+	height:300px;
+	width:500px;
+	float:left;
+	font-size:30;
+	text-align:center;
+	margin-top:50px;
+}
+
+/*.selected*/
+

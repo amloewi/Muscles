@@ -1,0 +1,25 @@
+$def with (people, site)
+
+<html>
+	<head>
+		<link rel="stylesheet" href="static/css/circus/stylesheet.css" type="text/css" charset="utf-8" />
+	<head>
+	
+	<body>
+		<div style="width:500px; margin:200px; margin-top; 100px; font-family:circusregular; font-size:40">
+			<table>
+				<!-- Make a list of all the people in the database -->
+				<!-- WATCH OUT: even COMMENTS can mess up the webpy scripting, if they're inside it. They interrupt IF (I think) they go out beyond it, to the left, because that signals to python that the loop has ended. -->
+				$for p in people:
+					<tr> 
+						<td style="font-size:40">
+							<a href="$site/$p.name">
+								$p.name
+							</a>
+						</td>
+					</tr>
+					
+			</table>
+		</div>
+	</body>
+<html>
